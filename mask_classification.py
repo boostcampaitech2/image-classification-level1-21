@@ -1,32 +1,11 @@
 import os
-import copy
 
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
-from tqdm import tqdm
 from PIL import Image
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch import Tensor
-from torchsummary import summary
-
-import torch.optim as optim
-from torch.optim import lr_scheduler
-
-import torchvision.datasets as dset
-import torchvision.transforms as T
-
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data import sampler
-
-# reference & tutorial : http://einops.rocks/pytorch-examples.html
-%pip install einops
-from einops import rearrange, repeat, reduce
-from einops.layers.torch import Rearrange, Reduce
+from torch.utils.data import Dataset
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -80,24 +59,25 @@ class MaskTrainDataset(Dataset):
         return image, label
 
 class MaskClassification:
-
     def __init__(self):
-
         self.train_path = "/opt/ml/input/data/train"
         self.eval_path  = "/opt/ml/input/data/eval"
 
-        self.train_data = pd.read_csv(os.path.join(train_path, "train.csv"))
+        self.train_data = pd.read_csv(os.path.join(self.train_path, "train.csv"))
         # self.train_data.head()
 
         self.bins = [0, 30, 60, 100] # age class
-        self.train_data["age_cls"] = pd.cut(train_data["age"], bins, right=False, labels=[0, 1, 2])
-        self.train_data["gender_cls"] = train_data["gender"] == "female"
+        self.train_data["age_cls"] = pd.cut(self.train_data["age"], self.bins, right=False, labels=[0, 1, 2])
+        self.train_data["gender_cls"] = self.train_data["gender"] == "female"
 
-    def show_imgs(self, data = self.train_data, path: str = "train/images/", 
+    def show_imgs(self, data = None, path: str = "./train/images/", 
                     row: int = 5, col: int = 5, 
                     width: int = 10, height: int = 15, 
                     start_position: int = 0, img_type: str = "normal", 
                     img_extension = ".jpg"):
+
+        if data is None:
+            data = self.train_data
 
         fig, axes = plt.subplots(row, col, figsize = (width, height))
         if path[-1] != "/":
@@ -129,8 +109,15 @@ class MaskClassification:
 
         plt.show()
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     m = MaskClassification()
     m.show_imgs()
-    
+
+'''
+
+from mask_classification import *
+
+MaskClassification().show_imgs()
+
+'''
