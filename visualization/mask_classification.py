@@ -63,6 +63,9 @@ class MaskClassification:
         self.train_path = "/opt/ml/input/data/train"
         self.eval_path  = "/opt/ml/input/data/eval"
 
+        self.train_path = "./train"
+        self.eval_path  = "./eval"
+
         self.train_data = pd.read_csv(os.path.join(self.train_path, "train.csv"))
         # self.train_data.head()
 
@@ -116,7 +119,7 @@ if __name__ == "__main__":
 
 '''
 
-from mask_classification import *
+from visualization.mask_classification import *
 
 MaskClassification().show_imgs()
 
