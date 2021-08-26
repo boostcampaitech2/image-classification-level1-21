@@ -34,6 +34,8 @@ class FaceDatasets(datasets.ImageFolder) :
             x1 = int(x1 * w); y1 = int(y1 * h)
             x2 = int(x2 * w); y2 = int(y2 * h)
             
+            if y1-left < 0 or x1-left < 0 or y2+right > h or x2+right > w : continue
+            
             face = frame[y1-left:y2+right,x1-left:x2+right,:]
         if face is None :
             face = frame
@@ -42,6 +44,12 @@ class FaceDatasets(datasets.ImageFolder) :
         
         return face
     
+    def getLabels(self) :
+        labels = []
+        for _ , label in self.samples :
+            labels.append(label)
+        return labels
+
     def __getitem__(self,index) : 
         path, target = self.samples[index]
         sample = self.loader(path)
