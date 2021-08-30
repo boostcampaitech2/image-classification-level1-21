@@ -1,7 +1,7 @@
 # 하루 한걸 부담없이 올리시면됩니다.
 
 ## 현재 하고 있는 것 + 올린 내용.(간단히)
-김상현 : 
+김상현 : MTCNN 분해 시도... 그러나 MTCNN은 neural network를 제외하고도 `.forward()` 혹은 `.detect()` 메서드에서 추가적으로 neural network output의 post-processing이 진행됨... 따라서 raw output을 활용하는 것이 쉽지는 않을듯... 그러나 학습된 conv layers들의 weight를 가져오는 방안도 고민 중!
 
 나경훈 : 
 
