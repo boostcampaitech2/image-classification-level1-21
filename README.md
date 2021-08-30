@@ -6,7 +6,7 @@
 
 ### train
 ```
-$ python3 
+$ python3 train.py
 ```
 
 
@@ -21,5 +21,5 @@ $ python3
 ```
 
 ```
-$ python3 --model Resnet50 --model_dir your/model/path.pt --data_dir /opt/ml/input/data/eval --output_dir output/
+$ python3 inference.py --model Resnet50 --model_dir your/model/path.pt --data_dir /opt/ml/input/data/eval --output_dir output/
 ```
