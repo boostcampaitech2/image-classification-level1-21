@@ -4,20 +4,21 @@ import math
 
 class Resnet50(nn.Module):
     def __init__(self, num_classes=18, pretrained=True):
-        model_ft = models.resnet50(pretrained=pretrained)
+        super().__init__()
+        self.model_ft = models.resnet50(pretrained=pretrained)
 
-        num_ftrs = model_ft.fc.in_features
-        model_ft.fc = nn.Linear(num_ftrs,18)
-        nn.init.xavier_uniform_(model_ft.fc.weight)
-        stdv = 1. / math.sqrt(model_ft.fc.weight.size(1))
-        model_ft.fc.bias.data.uniform_(-stdv, stdv)
+        num_ftrs = self.model_ft.fc.in_features
+        self.model_ft.fc = nn.Linear(num_ftrs,num_classes)
+        nn.init.xavier_uniform_(self.model_ft.fc.weight)
+        stdv = 1. / math.sqrt(self.model_ft.fc.weight.size(1))
+        self.model_ft.fc.bias.data.uniform_(-stdv, stdv)
 
         # all layer freeze
-        for param in model_ft.parameters() :
+        for param in self.model_ft.parameters() :
             param.requires_grad = False
 
         # FC unfreeze
-        for param in model_ft.fc.parameters() :
+        for param in self.model_ft.fc.parameters() :
             param.requires_grad = True
 
         # 학습시킬 레이어 unfreeze 해주시면 됩니다.
