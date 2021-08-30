@@ -1,18 +1,12 @@
 from model.pretrained_resnet import *
-from resnet50 import Resnet50
-from vit import ViT
+from model.resnet50 import Resnet50
+from model.vit import ViT
 
-class ModelList():
-    def __init__(self):
-        return
-
-    @classmethod
-    def parse_model(self, model_name):
-        if model_name == "PretrainedResnet":
-            return PretrainedResnet
-
-        if model_name == "Resnet50" :
-            return Resnet50
-
-        if model_name == "ViT" :
-            return ViT
+class MainModel(nn.Module):
+    def __init__(self, num_classes=18, pretrained=True):
+        super().__init__()
+        self.vit = ViT(num_classes, pretrained=pretrained)
+        
+    def forward(self, x):
+        x = self.vit(x)
+        return x

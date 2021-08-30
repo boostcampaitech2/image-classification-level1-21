@@ -5,22 +5,26 @@ from importlib import import_module
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from dataset import TestDataset, MaskBaseDataset
 
 
 def load_model(saved_model, num_classes, device):
-    model_cls = getattr(import_module("model"), args.model)
+    model_cls = getattr(import_module("model.models"), args.model)
     model = model_cls(
         num_classes=num_classes
     )
+
+    print(model_cls)
 
     # tarpath = os.path.join(saved_model, 'best.tar.gz')
     # tar = tarfile.open(tarpath, 'r:gz')
     # tar.extractall(path=saved_model)
 
-    model_path = os.path.join(saved_model, 'best.pth')
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    #model_path = os.path.join(saved_model, 'best.pth')
+    model_path = saved_model
+    #model.load_state_dict(torch.load(model_path, map_location=device))
 
     return model
 
@@ -45,7 +49,7 @@ def inference(data_dir, model_dir, output_dir, args):
     loader = torch.utils.data.DataLoader(
         dataset,
         batch_size=args.batch_size,
-        num_workers=8,
+        num_workers=0,
         shuffle=False,
         pin_memory=use_cuda,
         drop_last=False,
@@ -54,7 +58,7 @@ def inference(data_dir, model_dir, output_dir, args):
     print("Calculating inference results..")
     preds = []
     with torch.no_grad():
-        for idx, images in enumerate(loader):
+        for idx, images in tqdm(enumerate(loader)):
             images = images.to(device)
             pred = model(images)
             pred = pred.argmax(dim=-1)
@@ -69,13 +73,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Data and model checkpoints directories
-    parser.add_argument('--batch_size', type=int, default=1000, help='input batch size for validing (default: 1000)')
+    parser.add_argument('--batch_size', type=int, default=1, help='input batch size for validing (default: 1000)')
     parser.add_argument('--resize', type=tuple, default=(224, 224), help='resize size for image when you trained (default: (224, 224))')
-    parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
+    parser.add_argument('--model', type=str, default='MainModel', help='model type (default: BaseModel)')
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_EVAL', '/opt/ml/input/data/eval'))
-    parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_CHANNEL_MODEL', './model'))
+    parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_CHANNEL_MODEL', './model/model.pt'))
     parser.add_argument('--output_dir', type=str, default=os.environ.get('SM_OUTPUT_DATA_DIR', './output'))
 
     args = parser.parse_args()
