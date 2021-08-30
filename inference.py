@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from dataset import TestDataset, MaskBaseDataset
+from dataset.dataset import TestDataset, MaskBaseDataset
 
 
 def load_model(saved_model, num_classes, device):
@@ -24,7 +24,7 @@ def load_model(saved_model, num_classes, device):
 
     #model_path = os.path.join(saved_model, 'best.pth')
     model_path = saved_model
-    #model.load_state_dict(torch.load(model_path, map_location=device))
+    model.load_state_dict(torch.load(model_path, map_location=device))
 
     return model
 
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     # Data and model checkpoints directories
     parser.add_argument('--batch_size', type=int, default=1, help='input batch size for validing (default: 1000)')
     parser.add_argument('--resize', type=tuple, default=(224, 224), help='resize size for image when you trained (default: (224, 224))')
-    parser.add_argument('--model', type=str, default='MainModel', help='model type (default: BaseModel)')
+    parser.add_argument('--model', type=str, default='MainModel', help='model type (default: MainModel)')
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_EVAL', '/opt/ml/input/data/eval'))
