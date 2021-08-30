@@ -50,3 +50,16 @@ class MyModel(nn.Module):
     def forward(self, x):
         x = self.resnet(x)
         return x
+
+    
+# Pretrained Resnet (Leading Performance)
+class Resnet_Pretrained_bst(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.res50 = torchvision.models.resnet50(pretrained = True)
+        self.linear_layers = nn.Linear(1000,18, bias = True)
+    
+    def forward(self,x):
+        x = self.res50(x)
+        x = self.linear_layers(x)
+        return F.log_softmax(x, dim = 1)
