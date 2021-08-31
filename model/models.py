@@ -1,4 +1,5 @@
-from model.pretrained_resnet import *
+import torch.nn as nn
+
 from model.resnet50 import Resnet50
 from model.vit import ViT
 
