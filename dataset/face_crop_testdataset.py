@@ -57,7 +57,6 @@ class TestDataset(Dataset):
         return Image.fromarray(face[:,:,::-1]) 
     
     def __getitem__(self, index):
-        print(self.img_paths[index])
         image = Image.open(self.img_paths[index])
 
         if self.face_crop :
