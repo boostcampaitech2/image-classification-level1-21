@@ -1,7 +1,10 @@
 # 하루 한걸 부담없이 올리시면됩니다.
 
 ## 현재 하고 있는 것 + 올린 내용.(간단히)
-김상현 : MTCNN 분해 시도... 그러나 MTCNN은 neural network를 제외하고도 `.forward()` 혹은 `.detect()` 메서드에서 추가적으로 neural network output의 post-processing이 진행됨... 따라서 raw output을 활용하는 것이 쉽지는 않을듯... 그러나 학습된 conv layers들의 weight를 가져오는 방안도 고민 중!
+
+김상현 : MTCNN이 얼굴은 잘 인식하지만, 얼굴 및 눈코입 인식에 필요한 정보를 제외하고는 conv layer에서 모두 날려버리는듯... 따라서 ResNet 등 weight를 sharing하도록 새로운 구조를 짜면 될듯
+
+* 참고적으로 젊은 여자 판별시, 빨간색 옷을 입으면 모두 여자로 판정하는 overfitting 발생... 다른 모델에서도 이런 현상이 나타나는지 확인 바랍니당
 
 나경훈 : 
 
