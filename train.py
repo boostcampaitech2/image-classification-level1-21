@@ -188,11 +188,9 @@ def train(data_dir, model_dir, args):
                 lambda_ = 1 - ((x2 - x1) * (y2 - y1) / (inputs.size()[-1] * inputs.size()[-2]))
                 outs = model(inputs)
                 loss = criterion(outs, target_a) * lambda_ + criterion(outs, target_b) * (1.-lambda_)
-                print("TEST!")
             else:
                 outs = model(inputs)
                 loss = criterion(outs, labels)
-                print("TEST@")
 
             preds = torch.argmax(outs, dim=-1)
             loss = criterion(outs, labels)
@@ -278,7 +276,7 @@ if __name__ == '__main__':
     parser.add_argument("--resize", nargs='+', type=int, default=[224, 224], help='resize size for image when training')
     parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
     parser.add_argument('--valid_batch_size', type=int, default=64, help='input batch size for validing (default: 64)')
-    parser.add_argument('--model', type=str, default='MainModel', help='model type (default: MainModel)')
+    parser.add_argument('--model', type=str, default='CustomEfficientNet', help='model type (default: CustomEfficientNet)')
     parser.add_argument('--optimizer', type=str, default='SGD', help='optimizer type (default: SGD)')
     parser.add_argument('--lr', type=float, default=1e-3, help='learning rate (default: 1e-3)')
     parser.add_argument('--val_ratio', type=float, default=0.2, help='ratio for validaton (default: 0.2)')
