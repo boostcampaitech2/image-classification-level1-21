@@ -17,63 +17,77 @@ from model.models import Customresnet50
 from dataset.mask_base_dataset import MaskBaseDataset
 from dataset.split_by_profile_dataset import SplitByProfileDataset
 
-from pytorch_grad_cam import GradCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM
+from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 
-def create_cam(img_dir, data_dir, model_dir, args, rows: int = 3, cols: int = 3):
+def denormalize_img(input_img, mean, std):
+    plot_img = input_img.clone()
+
+    plot_img[:, 0, :, :] = plot_img[:, 2, :, :] * std[2] + mean[2]
+    plot_img[:, 1, :, :] = plot_img[:, 1, :, :] * std[1] + mean[1]
+    plot_img[:, 2, :, :] = plot_img[:, 0, :, :] * std[0] + mean[0]
+    plot_img = transforms.functional.to_pil_image(plot_img[0])
+
+    return plot_img
+
+
+def create_cam(save_to, data_dir, model_dir, args, rows: int = 3, cols: int = 3):
 
     device = torch.device("cuda")
-    model = Customresnet50(18)
-    print(model)
-    model.load_state_dict(torch.load(model_dir, map_location=device))
+    res50 = Customresnet50(18)
+    print(res50)
+
+    state_dict = torch.load(model_dir, map_location = device)
+    for key in list(state_dict.keys()):
+        state_dict[key.replace('res50.', 'model.')] = state_dict.pop(key)
+
+    res50.load_state_dict(state_dict)
 
     train_dataset = SplitByProfileDataset(data_dir)
-    train_loader = DataLoader(train_dataset, batch_size = 1, shuffle = True)
-
-    target_layer = model.model.fc
-    cam = GradCAM(model=model, target_layer=target_layer, use_cuda=True)
 
     mean = (0.548, 0.504, 0.479)
     std  = (0.237, 0.247, 0.246)
 
-    target_category = 10 # 확인해보고 싶은 class (0~17)
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
+    ])
 
-    model.eval()
-    fig, axes = plt.subplots(rows, cols)
+    train_dataset.set_transform(transform)
+    train_loader = DataLoader(train_dataset, batch_size = rows * cols, shuffle = True)
 
-    for r in range(rows):
-        for c in range(cols):
+    target_layer = res50.model.fc
+    cam = GradCAM(model=res50, target_layer=target_layer, use_cuda=True)
 
-            data_idx = np.random.randint(len(train_loader.dataset))
-            input_img = train_loader.dataset[data_idx][0].unsqueeze(dim=0).to(device)
-            label = train_loader.dataset[data_idx][1]
+    res50.eval()
 
-            score = model(input_img.clone())
-            _, pred = score.max(dim=1)
-            pred_label = pred.cpu().numpy()[0]
+    for input_img, label in train_loader:
 
-            if pred_label == target_category:
-                break
+        input_img = input_img.to(device)
+        print(input_img.shape)
 
-            if pred_label == label:
-                plt.title(str(label)+" // "+str(pred_label)+' (O)')
-            else:
-                plt.title(str(label)+" // "+str(pred_label)+' (X)')
-            
-            plot_img = train_loader.dataset[data_idx][0]
-            plot_img[0, :, :] = plot_img[2, :, :] * std[2] + mean[2]
-            plot_img[1, :, :] = plot_img[1, :, :] * std[1] + mean[1]
-            plot_img[2, :, :] = plot_img[0, :, :] * std[0] + mean[0]
-            plot_img = transforms.functional.to_pil_image(plot_img)
+        target_category = label
+
+        score = res50(input_img.clone())
+        _, pred = score.max(dim=1)
+        pred_label = pred.cpu().numpy()
+
+        plot_img = denormalize_img(input_img.clone(), mean, std)
+        grayscale_cam = cam(input_tensor=input_img, target_category=pred_label)
         
-            grayscale_cam = cam(input_tensor=input_img.clone().detach(), target_category=target_category)
-            grayscale_cam = grayscale_cam[0, :]
-            visualization = show_cam_on_image(np.float32(plot_img) / 255, grayscale_cam, use_rgb=True)
+        fig, axes = plt.subplots(rows, cols)
+
+        for r in range(rows):
+            for c in range(cols):
+                idx = r * cols + c
+                visualization = show_cam_on_image(np.float32(plot_img[idx]) / 255, grayscale_cam[idx, :], use_rgb=True)
+
+                axes[r][c].set_title("true: " + str(label[idx]) + " // " + "pred: " + str(pred_label[idx]))
+                axes[r][c].imshow(visualization)
+                axes[r][c].axis('off')
         
-            axes[r][c].imshow(visualization)
-            axes[r][c].axis('off')
-    
-    plt.savefig(img_dir, dpi=300, bbox_inches='tight')
+        fig.savefig(save_to, dpi=300, bbox_inches='tight')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -86,6 +100,6 @@ if __name__ == '__main__':
 
     data_dir = args.data_dir
     model_dir = args.model_dir
-    img_dir = args.save_to
+    save_to = args.save_to
 
-    create_cam(img_dir, data_dir, model_dir, args)
+    create_cam(save_to, data_dir, model_dir, args)
