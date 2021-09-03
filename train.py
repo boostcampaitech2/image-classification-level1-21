@@ -11,13 +11,12 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 
 from dataset.dataset import MaskBaseDataset
-from loss import create_criterion
 
+
+import wandb
 
 def seed_everything(seed):
     torch.manual_seed(seed)
@@ -87,7 +86,7 @@ def train(data_dir, model_dir, args):
     seed_everything(args.seed)
 
     save_dir = increment_path(os.path.join(model_dir, args.name))
-
+    os.mkdir(save_dir)
     # -- settings
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
@@ -137,17 +136,18 @@ def train(data_dir, model_dir, args):
     model = torch.nn.DataParallel(model)
 
     # -- loss & metric
-    criterion = create_criterion(args.criterion)  # default: cross_entropy
-    opt_module = getattr(import_module("torch.optim"), args.optimizer)  # default: SGD
-    optimizer = opt_module(
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(
         filter(lambda p: p.requires_grad, model.parameters()),
         lr=args.lr,
-        weight_decay=5e-4
+        momentum = args.optimizer_momentum 
     )
-    scheduler = StepLR(optimizer, args.lr_decay_step, gamma=0.5)
-
+    # -- lr_scheduler
+    if args.lr_scheduler == "StepLR" :
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.lr_decay_step, gamma=0.2)
+    else : 
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,patience=3)
     # -- logging
-    logger = SummaryWriter(log_dir=save_dir)
     with open(os.path.join(save_dir, 'config.json'), 'w', encoding='utf-8') as f:
         json.dump(vars(args), f, ensure_ascii=False, indent=4)
 
@@ -182,13 +182,19 @@ def train(data_dir, model_dir, args):
                     f"Epoch[{epoch}/{args.epochs}]({idx + 1}/{len(train_loader)}) || "
                     f"training loss {train_loss:4.4} || training accuracy {train_acc:4.2%} || lr {current_lr}"
                 )
-                logger.add_scalar("Train/loss", train_loss, epoch * len(train_loader) + idx)
-                logger.add_scalar("Train/accuracy", train_acc, epoch * len(train_loader) + idx)
 
                 loss_value = 0
                 matches = 0
+        wandb.log({
+            "Train loss": train_loss,
+            "Train acc" : train_acc,
+                    })
+        wandb.log({
+                "Image" : wandb.Image(inputs)
+                })
 
-        scheduler.step()
+        if args.lr_scheduler == "StepLR" :
+            scheduler.step()
 
         # val loop
         with torch.no_grad():
@@ -229,10 +235,13 @@ def train(data_dir, model_dir, args):
                 f"[Val] acc : {val_acc:4.2%}, loss: {val_loss:4.2} || "
                 f"best acc : {best_val_acc:4.2%}, best loss: {best_val_loss:4.2}"
             )
-            logger.add_scalar("Val/loss", val_loss, epoch)
-            logger.add_scalar("Val/accuracy", val_acc, epoch)
-            logger.add_figure("results", figure, epoch)
-            print()
+        if args.lr_scheduler == "ReduceLROnPlateau" : 
+            scheduler.step(val_loss)
+        wandb.log({
+                "Val loss": val_loss,
+                "Val acc" : val_acc,
+                })
+        print()
 
 
 if __name__ == '__main__':
@@ -250,14 +259,16 @@ if __name__ == '__main__':
     parser.add_argument("--resize", nargs='+', type=int, default=[224, 224], help='resize size for image when training')
     parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
     parser.add_argument('--valid_batch_size', type=int, default=64, help='input batch size for validing (default: 64)')
-    parser.add_argument('--model', type=str, default='MainModel', help='model type (default: MainModel)')
-    parser.add_argument('--optimizer', type=str, default='SGD', help='optimizer type (default: SGD)')
+    parser.add_argument('--model', type=str, default='Customresnet50', help='model type (default: Customresnet50)')
+    parser.add_argument('--optimizer_momentum', type=float, default=0, help='SGD with Momentum (default: 0)')
+    
     parser.add_argument('--lr', type=float, default=1e-3, help='learning rate (default: 1e-3)')
     parser.add_argument('--val_ratio', type=float, default=0.2, help='ratio for validaton (default: 0.2)')
-    parser.add_argument('--criterion', type=str, default='cross_entropy', help='criterion type (default: cross_entropy)')
+    parser.add_argument('--lr_scheduler', type=str, default='StepLR', help='learning rate scheduler type (default: StepLR)')
     parser.add_argument('--lr_decay_step', type=int, default=20, help='learning rate scheduler deacy step (default: 20)')
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
     parser.add_argument('--name', default='exp', help='model save at {SM_MODEL_DIR}/{name}')
+    parser.add_argument('--project', default='exp', help='wandb project name')
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
@@ -265,7 +276,14 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print(args)
-
+ 
+    wandb.init(project=args.project,
+               config={"batch_size": args.batch_size,
+                       "lr"        : args.lr,
+                       "epochs"    : args.epochs,
+                       "backborn"  : args.model,
+                       "criterion_name" : "CE",
+                       "save_name": args.name})
     data_dir = args.data_dir
     model_dir = args.model_dir
 
