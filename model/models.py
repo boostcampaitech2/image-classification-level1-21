@@ -49,12 +49,12 @@ class Customresnet50(nn.Module) :
         
         return output
 
-# Use two pre-trained model to ensemble
+# Use two pre-trained models to ensemble
 class EfficientResnet(nn.Module):
     def __init__(self, num_classes = 18, dropout_p = 0.6 , device = None, ):
         super(EfficientResnet, self).__init__()
 
-        self.effnet   = CustomEfficientNet(device, num_classes, dropout_p)
+        self.effnet = CustomEfficientNet(device, num_classes, dropout_p)
         self.resnet = Customresnet50(num_classes)
 
     def forward(self, x):
