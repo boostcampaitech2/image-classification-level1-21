@@ -23,3 +23,10 @@ $ python3 train.py
 ```
 $ python3 inference.py --model Resnet50 --model_dir your/model/path.pt --data_dir /opt/ml/input/data/eval --output_dir output/
 ```
+
+## Create CAM
+```
+( '--data_dir'   , type=str   )
+( '--model_dir'  , type=str   )
+( '--save_to'    , type=str   )
+```
