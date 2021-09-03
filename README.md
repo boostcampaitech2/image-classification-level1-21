@@ -5,7 +5,7 @@
 
 ### ResNet50
 
-![ResNet50](https://raw.githubusercontent.com/boostcampaitech2/image-classification-level1-21/master/resources/resnet50.png?token=AQ6WU4Q4KETPC2ZSLXNTJFLBGI3HI)
+![ResNet50](https://s3.us-west-2.amazonaws.com/secure.notion-static.com/eb0f8b97-7a0b-4c79-820f-4609daa160fe/Slide1.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAT73L2G45O3KS52Y5%2F20210903%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20210903T162851Z&X-Amz-Expires=86400&X-Amz-Signature=7435056ff740211661db26a28da7fe0a5a33e1087a7109190f9d4f314a574c34&X-Amz-SignedHeaders=host&response-content-disposition=filename%20%3D%22Slide1.png%22)
 
 
 ## Usage
