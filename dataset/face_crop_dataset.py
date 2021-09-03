@@ -52,7 +52,8 @@ class AgeLabels(int, Enum):
 # MTCNN 을 활용한 Face Crop 코드도 추가해놨습니다.
 # 선언 시 face_crop = True 면 얼굴 크롭합니다. 
 # 아무것도 안하면 기존 MaskBaseDataset 과 동일합니다.
-
+# + retinaface 활용 코드도 추가했습니다. 
+# + bgr2rgb 도 적용했습니다. 
 class MaskBaseDatasetWithFace(Dataset):
     num_classes = 3 * 2 * 3
 
@@ -71,14 +72,14 @@ class MaskBaseDatasetWithFace(Dataset):
     gender_labels = []
     age_labels = []
 
-    def __init__(self, data_dir, transform=None,mask_only=False, age_only=False, gender_only=False, face_crop=False):
+    def __init__(self, data_dir, transform=None,mask_only=False, age_only=False, gender_only=False, face_crop=False, face_model=None):
         self.data_dir = data_dir
         self.mask_only = mask_only
         self.age_only = age_only
         self.gender_only = gender_only
         self.face_crop = face_crop
         self.transform = transform
-
+        self.face_model = face_model
         self.setup()
 
 
@@ -107,19 +108,19 @@ class MaskBaseDatasetWithFace(Dataset):
                 self.age_labels.append(age_label)
     
     # MTCNN 이용해서 face crop.
-    # 얼굴 못 찾거나 confidence 가 낮으면 (300,300) CenterCrop.
+    # 얼굴 못 찾거나 confidence 가 낮으면 retina 로 잡아보고 안되면 (300,300) CenterCrop.
     def face(self, img) :
         mtcnn = MTCNN(image_size=384)
-        img = np.asarray(img)
+        img = np.asarray(img)[:,:,::-1]
 
         bbox , prob = mtcnn.detect(img)
         
         
         h,w = img.shape[:2]
-        face = None
+        face,isFace = None,True
         for i,p in enumerate(prob) :
             if p is None or p < 0.5 : 
-                face = img[h//2-150:h//2+150,w//2-150:w//2+150,:]
+                isFace = False
                 break
             
             d = 40
@@ -131,10 +132,21 @@ class MaskBaseDatasetWithFace(Dataset):
             
             face = img[y1:y2,x1:x2,:]
             
-            if face.shape[0] < 200 or face.shape[0] < 200 :
-                face = img[h//2-150:h//2+150,w//2-150:w//2+150,:]   
+        if not isFace or face.shape[0] < 200 or face.shape[0] < 200 :
+            annotation = self.face_model.predict_jsons(img)[0]
+            if annotation['score'] == -1 :
+                return Image.fromarray(img[h//2-150:h//2+150,w//2-150:w//2+150,:][:,:,::-1])
             
-        return Image.fromarray(face) 
+            d = 40
+            x1 = int(annotation['bbox'][0])-d; y1 = int(annotation['bbox'][1])-d
+            x2 = int(annotation['bbox'][2])+d; y2 = int(annotation['bbox'][3])+d
+
+            x1 = max(0,x1); y1 = max(0,y1)
+            x2 = min(w,x2); y2 = min(h,y2)
+            
+            face = img[y1:y2,x1:x2,:]
+            
+        return Image.fromarray(face[:,:,::-1]) 
 
     def __getitem__(self, index):
         assert self.transform is not None, ".set_tranform 메소드를 이용하여 transform 을 주입해주세요"
