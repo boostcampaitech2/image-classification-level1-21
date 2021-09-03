@@ -133,6 +133,11 @@ def train(data_dir, model_dir, args):
     model = model_module(
         num_classes=num_classes
     ).to(device)
+
+    # -- load
+    if args.load_file != None:
+        model.load_state_dict(torch.load(args.load_file, map_location=device))
+
     model = torch.nn.DataParallel(model)
 
     # -- loss & metric
@@ -165,7 +170,28 @@ def train(data_dir, model_dir, args):
 
             optimizer.zero_grad()
 
-            outs = model(inputs)
+            r = np.random.rand(1)
+            if r < args.cutmix_prob:
+                lambda_ = np.random.beta(1, 1)
+                rand_idx = np.random.randint(inputs.size()[0])
+                target_a = labels
+                target_b = (torch.ones(inputs.size()[0]).to(device) * labels[rand_idx]).long()
+                cx = np.random.randint(inputs.size()[-1])
+                cy = np.random.randint(inputs.size()[-2])
+                cut_w = np.int(np.sqrt(1 - lambda_) * inputs.size()[-1])
+                cut_h = np.int(np.sqrt(1 - lambda_) * inputs.size()[-2])
+                x1 = np.clip(cx - cut_w // 2, 0, inputs.size()[-1])
+                x2 = np.clip(cx + cut_w // 2, 0, inputs.size()[-1])
+                y1 = np.clip(cy - cut_h // 2, 0, inputs.size()[-2])
+                y2 = np.clip(cy + cut_h // 2, 0, inputs.size()[-2])
+                inputs[:,:,x1:x2,y1:y2] = inputs[rand_idx,:,x1:x2,y1:y2]
+                lambda_ = 1 - ((x2 - x1) * (y2 - y1) / (inputs.size()[-1] * inputs.size()[-2]))
+                outs = model(inputs)
+                loss = criterion(outs, target_a) * lambda_ + criterion(outs, target_b) * (1.-lambda_)
+            else:
+                outs = model(inputs)
+                loss = criterion(outs, labels)
+
             preds = torch.argmax(outs, dim=-1)
             loss = criterion(outs, labels)
 
@@ -253,18 +279,20 @@ if __name__ == '__main__':
 
     # Data and model checkpoints directories
     parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
-    parser.add_argument('--epochs', type=int, default=1, help='number of epochs to train (default: 1)')
+    parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train (default: 1)')
     parser.add_argument('--dataset', type=str, default='MaskBaseDataset', help='dataset augmentation type (default: MaskBaseDataset)')
     parser.add_argument('--augmentation', type=str, default='BaseAugmentation', help='data augmentation type (default: BaseAugmentation)')
     parser.add_argument("--resize", nargs='+', type=int, default=[224, 224], help='resize size for image when training')
     parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
     parser.add_argument('--valid_batch_size', type=int, default=64, help='input batch size for validing (default: 64)')
+
     parser.add_argument('--model', type=str, default='Customresnet50', help='model type (default: Customresnet50)')
     parser.add_argument('--optimizer_momentum', type=float, default=0, help='SGD with Momentum (default: 0)')
     
     parser.add_argument('--lr', type=float, default=1e-3, help='learning rate (default: 1e-3)')
     parser.add_argument('--val_ratio', type=float, default=0.2, help='ratio for validaton (default: 0.2)')
     parser.add_argument('--lr_scheduler', type=str, default='StepLR', help='learning rate scheduler type (default: StepLR)')
+
     parser.add_argument('--lr_decay_step', type=int, default=20, help='learning rate scheduler deacy step (default: 20)')
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
     parser.add_argument('--name', default='exp', help='model save at {SM_MODEL_DIR}/{name}')
@@ -273,6 +301,7 @@ if __name__ == '__main__':
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
     parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_MODEL_DIR', './saved'))
+    parser.add_argument('--load_file', type=str, default=None)#default=os.environ.get('SM_MODEL_DIR', './saved/model.pt'))
 
     args = parser.parse_args()
     print(args)

@@ -42,26 +42,28 @@ def show_imgs(data = None, path: str = "train/images/",
   return n
 
 if __name__ == "__main__":
-  class_num = 11
-  show_imgs_num = 2
+  class_num = 0
+  show_imgs_num = 5
   
   data = pd.read_csv('/opt/ml/input/data/eval/submission.csv')
 
-  data['Gender'] = 'female'
+  data['Gender'] = '1 female'
 
-  data.loc[data.ans % 6 == 0, 'Gender'] = 'male'
-  data.loc[data.ans % 6 == 1, 'Gender'] = 'male'
-  data.loc[data.ans % 6 == 2, 'Gender'] = 'male'
+  data.loc[data.ans % 6 == 0, 'Gender'] = '0 male'
+  data.loc[data.ans % 6 == 1, 'Gender'] = '0 male'
+  data.loc[data.ans % 6 == 2, 'Gender'] = '0 male'
 
-  data['Mask'] = 'Wear'
+  data['Mask'] = '0 Wear'
 
-  data.loc[data.ans > 5, 'Mask'] = 'Incorrect'
-  data.loc[data.ans > 11, 'Mask'] = 'Not Wear'
+  data.loc[data.ans > 5, 'Mask'] = '1 Incorrect'
+  data.loc[data.ans > 11, 'Mask'] = '2 Not Wear'
 
   data['Age'] = ''
-  data.loc[data.ans % 3 == 0, 'Age'] = '~29'
-  data.loc[data.ans % 3 == 1, 'Age'] = '30~59'
-  data.loc[data.ans % 3 == 2, 'Age'] = '60~'
+  data.loc[data.ans % 3 == 0, 'Age'] = '0 ~29'
+  data.loc[data.ans % 3 == 1, 'Age'] = '1 30~59'
+  data.loc[data.ans % 3 == 2, 'Age'] = '2 60~'
+  print(data.ans.value_counts()[1:-1])
+  print(data.groupby(['Mask', 'Gender', 'Age'])['ans'].count())
 
   print(data.groupby(['Mask', 'Gender', 'Age'])['ans'].count())
 
