@@ -134,6 +134,11 @@ def train(data_dir, model_dir, args):
     model = model_module(
         num_classes=num_classes
     ).to(device)
+
+    # -- load
+    if args.load_file != None:
+        model.load_state_dict(torch.load(args.load_file, map_location=device))
+
     model = torch.nn.DataParallel(model)
 
     # -- loss & metric
@@ -165,7 +170,30 @@ def train(data_dir, model_dir, args):
 
             optimizer.zero_grad()
 
-            outs = model(inputs)
+            r = np.random.rand(1)
+            if r < args.cutmix_prob:
+                lambda_ = np.random.beta(1, 1)
+                rand_idx = np.random.randint(inputs.size()[0])
+                target_a = labels
+                target_b = (torch.ones(inputs.size()[0]).to(device) * labels[rand_idx]).long()
+                cx = np.random.randint(inputs.size()[-1])
+                cy = np.random.randint(inputs.size()[-2])
+                cut_w = np.int(np.sqrt(1 - lambda_) * inputs.size()[-1])
+                cut_h = np.int(np.sqrt(1 - lambda_) * inputs.size()[-2])
+                x1 = np.clip(cx - cut_w // 2, 0, inputs.size()[-1])
+                x2 = np.clip(cx + cut_w // 2, 0, inputs.size()[-1])
+                y1 = np.clip(cy - cut_h // 2, 0, inputs.size()[-2])
+                y2 = np.clip(cy + cut_h // 2, 0, inputs.size()[-2])
+                inputs[:,:,x1:x2,y1:y2] = inputs[rand_idx,:,x1:x2,y1:y2]
+                lambda_ = 1 - ((x2 - x1) * (y2 - y1) / (inputs.size()[-1] * inputs.size()[-2]))
+                outs = model(inputs)
+                loss = criterion(outs, target_a) * lambda_ + criterion(outs, target_b) * (1.-lambda_)
+                print("TEST!")
+            else:
+                outs = model(inputs)
+                loss = criterion(outs, labels)
+                print("TEST@")
+
             preds = torch.argmax(outs, dim=-1)
             loss = criterion(outs, labels)
 
@@ -255,6 +283,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=1e-3, help='learning rate (default: 1e-3)')
     parser.add_argument('--val_ratio', type=float, default=0.2, help='ratio for validaton (default: 0.2)')
     parser.add_argument('--criterion', type=str, default='cross_entropy', help='criterion type (default: cross_entropy)')
+    parser.add_argument('--cutmix_prob', type=float, default=0., help='cutmix probablity (default: 0.)')
     parser.add_argument('--lr_decay_step', type=int, default=20, help='learning rate scheduler deacy step (default: 20)')
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
     parser.add_argument('--name', default='exp', help='model save at {SM_MODEL_DIR}/{name}')
