@@ -1,6 +1,12 @@
 # TEAM 21 "BLACKJACK"
 ## Image Classification Leaderboard
 
+## Model Visualization
+
+### ResNet50
+
+![ResNet50](https://raw.githubusercontent.com/boostcampaitech2/image-classification-level1-21/master/resources/resnet50.png?token=AQ6WU4Q4KETPC2ZSLXNTJFLBGI3HI)
+
 
 ## Usage
 
