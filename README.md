@@ -1,4 +1,18 @@
 # TEAM 21 "BLACKJACK"
+
+* [TEAM 21 "BLACKJACK"](https://github.com/boostcampaitech2/image-classification-level1-21#team-21-blackjack)
+  * [Image Classification Leaderboard](https://github.com/boostcampaitech2/image-classification-level1-21#image-classification-leaderboard)
+  * [Model Visualization](https://github.com/boostcampaitech2/image-classification-level1-21#model-visualization)
+    * [ResNet50](https://github.com/boostcampaitech2/image-classification-level1-21#resnet50)
+    * [EfficientNet b2](https://github.com/boostcampaitech2/image-classification-level1-21#efficientnet-b2)
+  * [Usage](https://github.com/boostcampaitech2/image-classification-level1-21#usage)
+    * [Train](https://github.com/boostcampaitech2/image-classification-level1-21#train)
+      * [Argument](https://github.com/boostcampaitech2/image-classification-level1-21#argument)
+      * [Using Argument](https://github.com/boostcampaitech2/image-classification-level1-21#using-argument)
+    * [Inference](https://github.com/boostcampaitech2/image-classification-level1-21#inference)
+      * [Argument](https://github.com/boostcampaitech2/image-classification-level1-21#argument-1)
+      * [Using Argument](https://github.com/boostcampaitech2/image-classification-level1-21#using-argument-1)
+
 ## Image Classification Leaderboard
 
 ## Model Visualization
@@ -13,7 +27,7 @@
 
 ## Usage
 
-### train
+### Train
 #### Argument
 ```
 ( '--model'      , type=str   , default='Customresnet50'    )
