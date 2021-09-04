@@ -9,7 +9,7 @@
 
 ### EfficientNet b2
 
-![EfficientNet](https://1.bp.blogspot.com/-DjZT_TLYZok/XO3BYqpxCJI/AAAAAAAAEKM/BvV53klXaTUuQHCkOXZZGywRMdU9v9T_wCLcBGAs/s1600/image2.png)
+![EfficientNet](https://s3.us-west-2.amazonaws.com/secure.notion-static.com/1ad8edab-28e6-4e9f-87fb-d11679bc98c9/EfficientNet.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAT73L2G45O3KS52Y5%2F20210904%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20210904T050232Z&X-Amz-Expires=86400&X-Amz-Signature=41de44e002b52836c8122e00b1e1ff4e0bad838d8a5cc2e610afcbecc53ceaf8&X-Amz-SignedHeaders=host&response-content-disposition=filename%20%3D%22EfficientNet.png%22)
 
 ## Usage
 
