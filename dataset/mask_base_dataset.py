@@ -4,6 +4,7 @@ from typing import Tuple
 from PIL import Image
 
 from torch.utils.data import Dataset, Subset, random_split
+import numpy as np
 
 
 class AgeLabels(int, Enum):
