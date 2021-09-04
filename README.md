@@ -1,5 +1,7 @@
 # TEAM 21 "BLACKJACK"
 
+* ["TEAM 21 Notion"](https://team21.nannullna.dev)
+
 * [TEAM 21 "BLACKJACK"](https://github.com/boostcampaitech2/image-classification-level1-21#team-21-blackjack)
   * [Image Classification Leaderboard](https://github.com/boostcampaitech2/image-classification-level1-21#image-classification-leaderboard)
   * [Model Visualization](https://github.com/boostcampaitech2/image-classification-level1-21#model-visualization)
@@ -12,8 +14,6 @@
     * [Inference](https://github.com/boostcampaitech2/image-classification-level1-21#inference)
       * [Argument](https://github.com/boostcampaitech2/image-classification-level1-21#argument-1)
       * [Using Argument](https://github.com/boostcampaitech2/image-classification-level1-21#using-argument-1)
-
-## Image Classification Leaderboard
 
 ## Model Visualization
 
