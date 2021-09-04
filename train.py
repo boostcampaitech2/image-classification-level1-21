@@ -193,7 +193,6 @@ def train(data_dir, model_dir, args):
                 loss = criterion(outs, labels)
 
             preds = torch.argmax(outs, dim=-1)
-            loss = criterion(outs, labels)
 
             loss.backward()
             optimizer.step()
@@ -292,6 +291,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=1e-3, help='learning rate (default: 1e-3)')
     parser.add_argument('--val_ratio', type=float, default=0.2, help='ratio for validaton (default: 0.2)')
     parser.add_argument('--lr_scheduler', type=str, default='StepLR', help='learning rate scheduler type (default: StepLR)')
+    parser.add_argument('--cutmix_prob', type=float, default=0., help='cutmix probablity (default: 0.)')
 
     parser.add_argument('--lr_decay_step', type=int, default=20, help='learning rate scheduler deacy step (default: 20)')
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
@@ -305,7 +305,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print(args)
- 
+
     wandb.init(project=args.project,
                config={"batch_size": args.batch_size,
                        "lr"        : args.lr,
