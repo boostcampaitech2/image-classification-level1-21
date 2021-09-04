@@ -72,21 +72,29 @@ def increment_path(path, exist_ok=False):
         exist_ok (bool): whether increment path (increment if False).
     """
     path = Path(path)
+    
     if (path.exists() and exist_ok) or (not path.exists()):
+        if not os.path.exists(str(path).split('/')[0]):
+            os.mkdir(str(path).split('/')[0])
+        if not path.exists():
+            os.mkdir(path)
         return str(path)
     else:
         dirs = glob.glob(f"{path}*")
         matches = [re.search(rf"%s(\d+)" % path.stem, d) for d in dirs]
         i = [int(m.groups()[0]) for m in matches if m]
         n = max(i) + 1 if i else 2
-        return f"{path}{n}"
+        path = f"{path}{n}"
+        if not os.path.exists(path):
+            os.mkdir(path)
+        return path
 
 
 def train(data_dir, model_dir, args):
     seed_everything(args.seed)
 
     save_dir = increment_path(os.path.join(model_dir, args.name))
-    os.mkdir(save_dir)
+    print(save_dir)
     # -- settings
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
@@ -300,7 +308,7 @@ if __name__ == '__main__':
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
-    parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_MODEL_DIR', './model'))
+    parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_MODEL_DIR', './saved'))
     parser.add_argument('--load_file', type=str, default=None)#default=os.environ.get('SM_MODEL_DIR', './saved/model.pt'))
 
     args = parser.parse_args()
