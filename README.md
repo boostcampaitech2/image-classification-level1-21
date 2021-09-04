@@ -14,21 +14,27 @@
 ## Usage
 
 ### train
+#### Argument
 ```
-$ python3 train.py
+( '--model'      , type=str   , default='Customresnet50'    )
+( '--dataset'    , type=str   , default='MaskBaseDataset'   )
+( '--data_dir'   , type=str   )
+```
+#### Using argument
+```
+$ python3 train.py --model Customresnet50 --dataset SplitByProfileDataset --data_dir /your/data/dir 
 ```
 
 
 ### Inference
+#### Argument
 ```
-( '--batch_size' , type=int   , default=1           )
-( '--resize'     , type=tuple , default=(224, 224)  )
-( '--model'      , type=str   , default='EfficientResnet' )
+( '--model'      , type=str   , default='EfficientResnet'   )
 ( '--data_dir'   , type=str   )
 ( '--model_dir'  , type=str   )
-( '--output_dir' , type=str   )
 ```
 
+#### Using argument
 ```
-$ python3 inference.py --model Resnet50 --model_dir your/model/path.pt --data_dir /opt/ml/input/data/eval --output_dir output/
+$ python3 inference.py --model EfficientResnet --model_dir your/model/path.pth --data_dir /your/data/dir
 ```
